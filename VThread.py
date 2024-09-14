@@ -19,9 +19,22 @@ def concatenate_videos(video_paths):
         clips_with_loop = [clip.loop(duration=max_duration) for clip in clips]
         # 垂直拼接影片 (stack on top of each other)
         final_clip_vertical = clips_array([[clip] for clip in clips_with_loop])
-        # # 儲存結果為新影片
-        final_clip_vertical.write_videofile("Output.mp4")
-        messagebox.showinfo("完成", f"影片已成功串接，並保存")
+
+        # 使用第一個影片的目錄作為儲存位置
+        output_dir = os.path.dirname(video_paths[0])
+        base_name = "Collage"
+        output_path = os.path.join(output_dir, f"{base_name}.mp4")
+        
+        # 如果檔案已經存在，則添加數字後綴
+        counter = 1
+        while os.path.exists(output_path):
+            output_path = os.path.join(output_dir, f"{base_name}{counter}.mp4")
+            counter += 1
+        
+        # 儲存結果為新影片
+        final_clip_vertical.write_videofile(output_path)
+        messagebox.showinfo("完成", f"影片已成功串接並保存")
+
     except Exception as e:
         messagebox.showerror("錯誤", f"處理影片時發生錯誤: {e}")
 
@@ -45,9 +58,10 @@ def on_drop(event):
     # 如果有無效文件，統一彈出一次警告
     if invalid_files:
         messagebox.showwarning("無效文件", f"文件無效或不支援: {', '.join(invalid_files)}")
-
-    if valid_videos:
+    elif len(valid_videos) != 1:
         concatenate_videos(valid_videos)
+    else:
+        messagebox.showwarning("錯誤", f"單個影片檔案無需串接")
 
 # 創建 TkinterDnD 窗口
 root = TkinterDnD.Tk()
